@@ -67,30 +67,16 @@ class Discriminator(object):
             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
             tensor = tf.layers.flatten(tensor)
-            #prev = 16*base_channel*8
-            # for i in range(3):
-            #     weight = tf.get_variable('w{}'.format(i), shape=(prev, base_channel*64), dtype=tf.float32)
-            #     bias = tf.get_variable('b{}'.format(i), shape=(base_channel*64,), dtype=tf.float32)
-            #     prev = base_channel*64
-            #     tensor = tf.nn.relu(tf.matmul(tensor, weight) + bias)
-            #     self.weights.append(weight)
-            #     self.biases.append(bias)
             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
             
             # Output
-            tensor = tf.layers.dense(tensor, units=1, kernel_initializer=w_init, activation=None)
-            # weight = tf.get_variable('w_out', shape=(prev, 3), dtype=tf.float32)
-            # bias = tf.get_variable('b_out', shape=(3,), dtype=tf.float32)
-            # tensor = tf.matmul(tensor, weight) + bias
-            # self.weights.append(weight)
-            # self.biases.append(bias)
-            return tensor
+            logit = tf.layers.dense(tensor, units=1, kernel_initializer=w_init, activation=None)
+            return logit
     
     def clip_weights_op(self):
         clip_op = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in self.vars()]
-        #clip_op.extend([p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in self.biases])
         return clip_op
         
     def vars(self):

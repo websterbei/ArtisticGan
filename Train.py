@@ -14,39 +14,41 @@ input_dir = './img_resized'
 output_dir = './img_output'
 max_step = 50000
 
-def loss(logit, label):
-    return tf.nn.sigmoid_cross_entropy_with_logits(labels=label, logits=logit)
-
-with tf.device('GPU:0'):
+def create_placeholders():
     noise = tf.placeholder(tf.float32, shape=(None, noise_dim))
     input_image = tf.placeholder(tf.float32, shape=(None, output_dim, output_dim, 3))
+    return noise, input_image
+
+def compute_loss(noise, input_image):
     generator = Generator(input_noise_size=noise_dim, output_size=(output_dim, output_dim))
-    generated_image = generator(noise)
     discriminator = Discriminator()
 
+    generated_image = generator(noise)
     input_image_dis = discriminator(input_image)
     generated_image_dis = discriminator(generated_image)
-    #input_image_label = tf.ones_like(input_image_dis)
-    #generated_image_label = tf.zeros_like(generated_image_dis)
-    #D_loss = tf.reduce_mean(loss(input_image_dis, input_image_label) + loss(generated_image_dis, generated_image_label))
-    #G_loss = tf.reduce_mean(loss(generated_image_dis, tf.ones_like(generated_image_dis)))
     D_loss = tf.reduce_mean(input_image_dis) - tf.reduce_mean(generated_image_dis)
     G_loss = tf.reduce_mean(generated_image_dis)
+    return G_loss, D_loss, generator, discriminator, generated_image
 
-    generator_variables = tf.trainable_variables(scope='generator')
-    discriminator_variables = tf.trainable_variables(scope='discriminator')
-
+def get_ops(geneator, discriminator):
     clip_op = discriminator.clip_weights_op()
     D_optim = tf.train.RMSPropOptimizer(learning_rate=0.00002).minimize(D_loss, var_list=discriminator.vars())
     G_optim = tf.train.RMSPropOptimizer(learning_rate=0.00002).minimize(G_loss, var_list=generator.vars())
+    return G_optim, D_optim, clip_op
+
+def get_data():
+    data_loader = DataLoader(input_dir)
+    dataset = data_loader.initialize_dataset()
+    iterator = dataset.make_one_shot_iterator()
+    images = iterator.get_next()
+    return images
 
 
-# Initialize data loader
-data_loader = DataLoader(input_dir)
-dataset = data_loader.initialize_dataset()
-iterator = dataset.make_one_shot_iterator()
-images = iterator.get_next()
-
+with tf.device('GPU:0'):
+    noise, input_image = create_placeholders()
+    G_loss, D_loss, generator, discriminator, generated_image = compute_loss(noise, input_image)
+    G_optim, D_optim, clip_op = get_ops(generator, discriminator)
+    images = get_data()
 
 k_d = 5
 k_g = 5
