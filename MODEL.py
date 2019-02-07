@@ -34,47 +34,98 @@ class Generator(object):
     def vars(self):
         return tf.trainable_variables(scope='generator')
 
+# '''
+# VGG-16
+# '''
+# class Discriminator(object):
+#     def __init__(self):
+#         pass
+
+#     def __call__(self, image, reuse=tf.AUTO_REUSE):
+#         tensor = image
+#         base_channel = 8
+#         self.weights = []
+#         self.biases = []
+#         w_init = tf.random_normal_initializer(stddev=0.02)
+#         with tf.variable_scope('discriminator', reuse=reuse):
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*2, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*2, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+#             tensor = tf.layers.flatten(tensor)
+#             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
+#             tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
+            
+#             # Output
+#             logit = tf.layers.dense(tensor, units=1, kernel_initializer=w_init, activation=None)
+#             return logit
+    
+#     def clip_weights_op(self):
+#         clip_op = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in self.vars()]
+#         return clip_op
+        
+#     def vars(self):
+#         return tf.trainable_variables(scope='discriminator')
+
 '''
-VGG-16
+WDCGAN Discriminator
 '''
 class Discriminator(object):
     def __init__(self):
         pass
 
     def __call__(self, image, reuse=tf.AUTO_REUSE):
-        tensor = image
-        base_channel = 8
-        self.weights = []
-        self.biases = []
         w_init = tf.random_normal_initializer(stddev=0.02)
+        gamma_init=tf.random_normal_initializer(1., 0.02)
+        is_train = True
+
+        tensor = image
         with tf.variable_scope('discriminator', reuse=reuse):
-            tensor = tf.layers.conv2d(tensor, filters=base_channel, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*2, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*2, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*4, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.conv2d(tensor, filters=base_channel*8, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.max_pooling2d(tensor, pool_size=(2,2), strides=(2,2), padding='same')
+            tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+
+            tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+            tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
             tensor = tf.layers.flatten(tensor)
-            tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, units=base_channel*64, kernel_initializer=w_init, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, units=1024, activation=tf.nn.leaky_relu)
+            logit = tf.layers.dense(tensor, units=1, activation=None)
             
-            # Output
-            logit = tf.layers.dense(tensor, units=1, kernel_initializer=w_init, activation=None)
-            return logit
-    
+            return logit 
+
+
     def clip_weights_op(self):
         clip_op = [p.assign(tf.clip_by_value(p, -0.01, 0.01)) for p in self.vars()]
         return clip_op
