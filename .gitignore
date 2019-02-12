@@ -1,3 +1,7 @@
 __pycache__
 .DS_Store
 *.pyc
+img/
+img_output/
+img_resized/
+img_resized2/
