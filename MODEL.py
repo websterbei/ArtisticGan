@@ -17,6 +17,7 @@ class Generator(object):
     
     def upsample(self, tensor, filter=64, kernel_size=(4,4), strides=(2,2)):
         tensor = tf.layers.conv2d_transpose(tensor, filters=filter, kernel_size=kernel_size, strides=strides, padding='same', activation=tf.nn.leaky_relu)
+        tensor = tf.layers.batch_normalization(tensor, training=True)
         return tensor
     
     def __call__(self, noise):
@@ -28,6 +29,7 @@ class Generator(object):
             tensor = self.upsample(tensor, filter=512)
             tensor = self.upsample(tensor, filter=256)
             tensor = self.upsample(tensor, filter=128)
+            #tensor = tf.layers.conv2d_transpose(tensor, filters=3, kernel_size=(4,4), strides=(2,2), padding='same', activation=tf.nn.tanh)
             tensor = tf.layers.conv2d(tensor, filters=3, kernel_size=(3,3), padding='same', activation=tf.nn.tanh)
             return tensor
     
@@ -89,7 +91,7 @@ class Discriminator(object):
     def __init__(self):
         pass
 
-    def __call__(self, image, reuse=tf.AUTO_REUSE):
+    def __call__(self, image, reuse=False):
         w_init = tf.random_normal_initializer(stddev=0.02)
         gamma_init=tf.random_normal_initializer(1., 0.02)
         is_train = True

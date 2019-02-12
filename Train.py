@@ -9,7 +9,7 @@ noise_dim = 16
 output_dim = 128
 batch_size = 5
 
-input_dir = './img_resized'
+input_dir = './img_resized2'
 output_dir = './img_output'
 max_step = 50000
 
@@ -23,10 +23,19 @@ def compute_loss(noise, input_image):
     discriminator = Discriminator()
 
     generated_image = generator(noise)
-    input_image_dis = discriminator(input_image)
-    generated_image_dis = discriminator(generated_image)
-    D_loss = tf.reduce_mean(input_image_dis) - tf.reduce_mean(generated_image_dis)
-    G_loss = tf.reduce_mean(generated_image_dis)
+    input_image_dis = discriminator(input_image, reuse=False)
+    generated_image_dis = discriminator(generated_image, reuse=True)
+
+    #epsilon = tf.random_uniform(shape=[batch_size, 1, 1, 1], minval=0., maxval=1.)
+    #mixed_image = input_image + epsilon * (generated_image - input_image)
+    #mixed_image_dis = discriminator(mixed_image, reuse=True)
+    #gradient_mixed_image_dis = tf.gradients(mixed_image_dis, [mixed_image])[0]
+    #gradient_mixed_image_dis = tf.sqrt(tf.reduce_sum(tf.square(gradient_mixed_image_dis), axis=[1,2,3]))
+    #gradient_penalty = tf.reduce_mean((gradient_mixed_image_dis - 1.) ** 2)
+
+    D_loss = tf.reduce_mean(generated_image_dis) - tf.reduce_mean(input_image_dis) #+ 10.0 * gradient_penalty
+    G_loss = -tf.reduce_mean(generated_image_dis)
+
     return G_loss, D_loss, generator, discriminator, generated_image
 
 def get_ops(geneator, discriminator):
@@ -47,7 +56,8 @@ with tf.device('GPU:0'):
     noise, input_image = create_placeholders()
     G_loss, D_loss, generator, discriminator, generated_image = compute_loss(noise, input_image)
     G_optim, D_optim, clip_op = get_ops(generator, discriminator)
-    images = get_data()
+    
+images = get_data()
 
 def train_generator(sess):
     z = np.random.uniform(0,1,(batch_size, noise_dim))
@@ -83,16 +93,16 @@ k_tot = 10
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    for i in range(200):
+    for i in range(50):
         dl = train_discriminator(sess)
         print("Discriminator Loss: {}".format(dl))
     for i in range(max_step):
         d_loss = []
         g_loss = []
-        for _ in range(k_d):
+        for _ in range(1):
             dl = train_discriminator(sess)
             d_loss.append(dl)
-        for _ in range(k_g):
+        for _ in range(20):
             gl = train_generator(sess)
             g_loss.append(gl)
         k_g, k_d = update_train_control_variables(g_loss, d_loss, k_tot)
