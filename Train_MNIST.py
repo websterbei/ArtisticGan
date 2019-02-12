@@ -42,8 +42,8 @@ def compute_loss(noise, input_image):
 
 def get_ops(geneator, discriminator):
     clip_op = discriminator.clip_weights_op()
-    D_optim = tf.train.RMSPropOptimizer(learning_rate=0.0002).minimize(D_loss, var_list=discriminator.vars())
-    G_optim = tf.train.RMSPropOptimizer(learning_rate=0.0002).minimize(G_loss, var_list=generator.vars())
+    D_optim = tf.train.RMSPropOptimizer(learning_rate=0.0005).minimize(D_loss, var_list=discriminator.vars())
+    G_optim = tf.train.RMSPropOptimizer(learning_rate=0.0005).minimize(G_loss, var_list=generator.vars())
     return G_optim, D_optim, clip_op
 
 with tf.device('CPU:0'):

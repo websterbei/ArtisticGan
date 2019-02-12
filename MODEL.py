@@ -44,9 +44,9 @@ class Generator(object):
     def __call__(self, noise):
         with tf.variable_scope('generator', reuse=False):
             tensor = tf.layers.dense(noise, 128, activation=tf.nn.relu)
-            tensor = tf.layers.dense(noise, 256, activation=tf.nn.relu)
-            tensor = tf.layers.dense(noise, 512, activation=tf.nn.relu)
-            tensor = tf.layers.dense(noise, 784, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, 256, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, 512, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, 784, activation=tf.nn.relu)
             tensor = tf.reshape(tensor, shape=(-1, 28, 28))
             return tensor
     
@@ -160,10 +160,6 @@ class Discriminator(object):
         pass
 
     def __call__(self, image, reuse=False):
-        w_init = tf.random_normal_initializer(stddev=0.02)
-        gamma_init=tf.random_normal_initializer(1., 0.02)
-        is_train = True
-
         tensor = image
         with tf.variable_scope('discriminator', reuse=reuse):
             # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
@@ -191,6 +187,8 @@ class Discriminator(object):
 
             tensor = tf.layers.flatten(tensor)
             tensor = tf.layers.dense(tensor, units=1024, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.dense(tensor, units=512, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.dense(tensor, units=256, activation=tf.nn.leaky_relu)
             logit = tf.layers.dense(tensor, units=1, activation=None)
             
             return logit 
