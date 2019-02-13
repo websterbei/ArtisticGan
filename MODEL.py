@@ -43,10 +43,10 @@ class Generator(object):
     
     def __call__(self, noise):
         with tf.variable_scope('generator', reuse=False):
-            tensor = tf.layers.dense(noise, 128, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, 256, activation=tf.nn.relu)
+            tensor = tf.layers.dense(noise, 256, activation=tf.nn.relu)
             tensor = tf.layers.dense(tensor, 512, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, 784, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, 1024, activation=tf.nn.relu)
+            tensor = tf.layers.dense(tensor, 784, activation=tf.nn.tanh)
             tensor = tf.reshape(tensor, shape=(-1, 28, 28))
             return tensor
     

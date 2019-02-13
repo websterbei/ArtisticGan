@@ -5,8 +5,8 @@ import numpy as np
 import skimage.io as io
 import os
 
-noise_dim = 16
-batch_size = 10
+noise_dim = 100
+batch_size = 100
 
 input_dir = './img_resized2'
 output_dir = './img_output'
@@ -35,15 +35,15 @@ def compute_loss(noise, input_image):
     #D_loss = tf.reduce_mean(generated_image_dis) - tf.reduce_mean(input_image_dis) #+ 10.0 * gradient_penalty
     #G_loss = -tf.reduce_mean(generated_image_dis)
 
-    D_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(input_image_dis), logits=input_image_dis) + tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(generated_image_dis), logits=generated_image_dis)
-    G_loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(generated_image_dis), logits=generated_image_dis)
+    D_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(input_image_dis), logits=input_image_dis) + tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.zeros_like(generated_image_dis), logits=generated_image_dis))
+    G_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=tf.ones_like(generated_image_dis), logits=generated_image_dis))
 
     return G_loss, D_loss, generator, discriminator, generated_image
 
 def get_ops(geneator, discriminator):
     clip_op = discriminator.clip_weights_op()
-    D_optim = tf.train.RMSPropOptimizer(learning_rate=0.0005).minimize(D_loss, var_list=discriminator.vars())
-    G_optim = tf.train.RMSPropOptimizer(learning_rate=0.0005).minimize(G_loss, var_list=generator.vars())
+    D_optim = tf.train.AdamOptimizer(learning_rate=0.0005).minimize(D_loss, var_list=discriminator.vars())
+    G_optim = tf.train.AdamOptimizer(learning_rate=0.0005).minimize(G_loss, var_list=generator.vars())
     return G_optim, D_optim, clip_op
 
 with tf.device('CPU:0'):
@@ -67,7 +67,7 @@ def train_discriminator(sess):
     return dl
 
 def generate_image(sess):
-    z = np.random.uniform(0,1,(batch_size, noise_dim))
+    z = np.random.uniform(0,1,(1, noise_dim))
     g_image = np.clip(sess.run(generated_image, {noise:z})[0,:,:], -1, 1)
     io.imsave(os.path.join(output_dir, '{}.jpg'.format(i)), g_image)
 
@@ -90,18 +90,18 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     for i in range(50):
         dl = train_discriminator(sess)
-        print("Discriminator Loss: {}".format(dl))
+        print("Discriminator Loss: {}".format(np.mean(dl)))
     for i in range(max_step):
         d_loss = []
         g_loss = []
         for _ in range(1):
             dl = train_discriminator(sess)
             d_loss.append(dl)
-        for _ in range(50):
+        for _ in range(20):
             gl = train_generator(sess)
             g_loss.append(gl)
         print("Discriminator Loss: {}, Generator Loss: {}".format(np.mean(d_loss), np.mean(g_loss)))
         del d_loss
         del g_loss
-        if i%100==0:
+        if i%50==0:
             generate_image(sess)
