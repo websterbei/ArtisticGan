@@ -1,4 +1,5 @@
 import tensorflow as tf
+import tensorflow.contrib.layers as tcl
 
 # '''
 # Training Stage:
@@ -43,12 +44,22 @@ class Generator(object):
     
     def __call__(self, noise):
         with tf.variable_scope('generator', reuse=False):
-            tensor = tf.layers.dense(noise, 256, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, 512, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, 1024, activation=tf.nn.relu)
-            tensor = tf.layers.dense(tensor, 784, activation=tf.nn.tanh)
-            tensor = tf.reshape(tensor, shape=(-1, 28, 28))
-            return tensor
+            tensor = tf.reshape(noise, shape=(-1, 10, 10, 1))
+            conv1 = tf.layers.conv2d_transpose(tensor, 1024, [3, 3], strides=(1, 1), padding='valid')
+
+            lrelu1 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv1, training=True))
+
+            conv2 = tf.layers.conv2d_transpose(lrelu1, 512, [5, 5], strides=(2, 2), padding='valid')
+            lrelu2 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv2, training=True))
+
+            conv3 = tf.layers.conv2d_transpose(lrelu2, 256, [5, 5], strides=(2, 2), padding='valid')
+            lrelu3 = tf.nn.leaky_relu(tf.layers.batch_normalization(conv3, training=True))
+
+            conv4 = tf.layers.conv2d_transpose(lrelu3, 3, [5, 5], strides=(2, 2), padding='valid')
+
+            out = tf.nn.tanh(conv4)
+            print(out.shape)
+            return out
     
     def vars(self):
         return tf.trainable_variables(scope='generator')
@@ -152,6 +163,56 @@ class Generator(object):
 #     def vars(self):
 #         return tf.trainable_variables(scope='discriminator')
 
+# '''
+# WDCGAN Discriminator
+# '''
+# class Discriminator(object):
+#     def __init__(self):
+#         pass
+
+#     def __call__(self, image, reuse=False):
+#         tensor = image
+#         with tf.variable_scope('discriminator', reuse=reuse):
+#             # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             # tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+#             # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+
+#             tensor = tf.layers.flatten(tensor)
+#             tensor = tf.layers.dense(tensor, units=1024, activation=tf.nn.leaky_relu)
+#             tensor = tf.layers.dense(tensor, units=512, activation=tf.nn.leaky_relu)
+#             tensor = tf.layers.dense(tensor, units=256, activation=tf.nn.leaky_relu)
+#             logit = tf.layers.dense(tensor, units=1, activation=None)
+            
+#             return logit 
+
+
+#     def clip_weights_oleaky_relu
+#         clip_op = [p.aleaky_relu-0.01, 0.01)) for p in self.vars()]
+#         return clip_opleaky_relu
+        
+#     def vars(self):
+#         return tf.trainable_variables(scope='discriminator')
+
+
 '''
 WDCGAN Discriminator
 '''
@@ -161,34 +222,36 @@ class Discriminator(object):
 
     def __call__(self, image, reuse=False):
         tensor = image
+        is_train = True
         with tf.variable_scope('discriminator', reuse=reuse):
-            # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
+            # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), padding='same', activation=None)
 
-            # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            # tensor = tf.layers.conv2d(tensor, filters=64, kernel_size=(3,3), strides=(2,2), padding='same', activation=None)
+            # tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(1,1), padding='same', activation=None)
+            # tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            # tensor = tf.layers.conv2d(tensor, filters=128, kernel_size=(3,3), strides=(2,2), padding='same', activation=None)
+            # tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(1,1), padding='same',  activation=None)
+            # tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            # tensor = tf.layers.conv2d(tensor, filters=256, kernel_size=(3,3), strides=(2,2), padding='same', activation=None)
+            # tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(1,1), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(1,1), padding='same', activation=None)
+            tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
-            # tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(2,2), padding='same', kernel_initializer=w_init, activation=tf.nn.leaky_relu)
-            # tensor = tf.layers.batch_normalization(tensor, gamma_initializer=gamma_init, training=is_train)
+            tensor = tf.layers.conv2d(tensor, filters=512, kernel_size=(3,3), strides=(2,2), padding='same', activation=None)
+            tensor = tf.nn.leaky_relu(tf.layers.batch_normalization(tensor, training=is_train))
 
             tensor = tf.layers.flatten(tensor)
+
             tensor = tf.layers.dense(tensor, units=1024, activation=tf.nn.leaky_relu)
             tensor = tf.layers.dense(tensor, units=512, activation=tf.nn.leaky_relu)
-            tensor = tf.layers.dense(tensor, units=256, activation=tf.nn.leaky_relu)
+            tensor = tf.layers.dense(tensor, units=128, activation=tf.nn.leaky_relu)
             logit = tf.layers.dense(tensor, units=1, activation=None)
             
             return logit 
